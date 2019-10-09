@@ -30,10 +30,15 @@ class struc_Tile:
 #  \______/  |______/   \______/  |_______| \______|    |__|    |_______/
 
 class obj_Actor:
-    def __init__(self, x, y, sprite):
+    def __init__(self, x, y, name_object, sprite, creature=None):
         self.x = x  # Map Address
         self.y = y  # Map Address
         self.sprite = sprite
+
+        if creature:
+            self.creature = creature
+            creature.owner = self
+
 
     def draw(self):
         SURFACE_MAIN.blit(self.sprite, (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
@@ -43,6 +48,30 @@ class obj_Actor:
         if GAME_MAP[self.x + dx][self.y + dy].block_path == False:
             self.x += dx
             self.y += dy
+
+
+#   ______   ______   .___  ___. .______     ______   .__   __.  _______ .__   __. .___________.    _______.
+#  /      | /  __  \  |   \/   | |   _  \   /  __  \  |  \ |  | |   ____||  \ |  | |           |   /       |
+# |  ,----'|  |  |  | |  \  /  | |  |_)  | |  |  |  | |   \|  | |  |__   |   \|  | `---|  |----`  |   (----`
+# |  |     |  |  |  | |  |\/|  | |   ___/  |  |  |  | |  . `  | |   __|  |  . `  |     |  |        \   \
+# |  `----.|  `--'  | |  |  |  | |  |      |  `--'  | |  |\   | |  |____ |  |\   |     |  |    .----)   |
+#  \______| \______/  |__|  |__| | _|       \______/  |__| \__| |_______||__| \__|     |__|    |_______/
+
+class com_Creature:
+    """
+    Creatures have health, can damage other objects by attacking them. Can also die.
+    """
+    def __init__(self, name_instance, hp=10):
+        self.name = name_instance
+        self.hp = hp
+
+
+# class com_Items:
+#     pass
+
+
+# class com_Containers:
+#     pass
 
 
 # .___  ___.      ___      .______
@@ -79,6 +108,7 @@ def draw_game():
     draw_map(GAME_MAP)
 
     # TODO: draw the character
+    ENEMY.draw()
     PLAYER.draw()
 
     # update the display
@@ -154,7 +184,7 @@ def game_initializate():
     :return: None
     """
 
-    global SURFACE_MAIN, GAME_MAP, PLAYER
+    global SURFACE_MAIN, GAME_MAP, PLAYER, ENEMY
 
     # initialize Pygame
     pygame.init()
@@ -167,7 +197,11 @@ def game_initializate():
     GAME_MAP = map_create()
 
     # Initialize the player
-    PLAYER = obj_Actor(0, 0, constants.S_PLAYER)
+    creature_com1 = com_Creature("greg")
+    PLAYER = obj_Actor(0, 0, "python", constants.S_PLAYER, creature=creature_com1)
+
+    creature_com2 = com_Creature("jackie")
+    ENEMY = obj_Actor(15, 15, "crab", constants.S_ENEMY, creature=creature_com2)
 
 
 # .______       __    __  .__   __.
@@ -179,4 +213,3 @@ def game_initializate():
 if __name__ == '__main__':
     game_initializate()
     game_main_loop()
-
