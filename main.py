@@ -51,8 +51,22 @@ class obj_Actor:
         SURFACE_MAIN.blit(self.sprite, (self.x * constants.CELL_WIDTH, self.y * constants.CELL_HEIGHT))
 
     def move(self, dx, dy):
-        # Only move when the block ahead is False
-        if GAME_MAP[self.x + dx][self.y + dy].block_path == False:
+
+        # Checks if the movement direction is a Tile or not
+        tile_is_Wall = (GAME_MAP[self.x + dx][self.y + dy].block_path == True)  # True if it is a wall
+
+        target = None
+
+        # Checks if the objects are not self and not going to bump into the enemy square
+        for object in GAME_OBJECTS:
+            if object is not self and object.x == self.x + dx and object.y == self.y + dy and object.creature:
+                target = object
+                break
+
+        if target:
+            print(self.creature.name + " attacks " + target.creature.name)
+
+        if not tile_is_Wall and target is None:
             self.x += dx
             self.y += dy
 
@@ -85,7 +99,7 @@ class ai_Test:
     Once per turn, execute.
     """
     def take_turn(self):
-        self.owner.move(-1, 0)
+        self.owner.move(libtcod.random_get_int(0, -1, 1), libtcod.random_get_int(0, -1, 1))
 
 
 # TODO: class com_Item:
@@ -106,6 +120,18 @@ def map_create():
 
     new_map[10][10].block_path = True
     new_map[10][15].block_path = True
+
+    for x in range(constants.MAP_WIDTH):
+        # Creates the top horizontal line
+        new_map[x][0].block_path = True
+        # Creates the bottom horizontal line
+        new_map[x][constants.MAP_HEIGHT - 1].block_path = True
+
+    for y in range(constants.MAP_HEIGHT):
+        # Creates the vertical left line
+        new_map[0][y].block_path = True
+        # Creates the vertical right line
+        new_map[constants.MAP_WIDTH - 1][y].block_path = True
 
     return new_map
 
@@ -204,7 +230,8 @@ def game_initialization():
     pygame.init()
 
     # Initializes the window surface
-    SURFACE_MAIN = pygame.display.set_mode((constants.GAME_WIDTH, constants.GAME_HEIGHT))
+    SURFACE_MAIN = pygame.display.set_mode((constants.MAP_WIDTH * constants.CELL_WIDTH,
+                                            constants.MAP_HEIGHT * constants.CELL_HEIGHT))
     pygame.display.set_caption("The Crazy Adventures of Culebrita")
 
     # Initializes the map of the game
@@ -212,13 +239,13 @@ def game_initialization():
 
     # Initialize the player
     creature_com1 = com_Creature("greg")
-    PLAYER = obj_Actor(0, 0, "python", constants.S_PLAYER, creature=creature_com1)
+    PLAYER = obj_Actor(1, 1, "python", constants.S_PLAYER, creature=creature_com1)
 
     creature_com2 = com_Creature("jackie")
     ai_com = ai_Test()
-    ENEMY = obj_Actor(15, 15, "crab", constants.S_ENEMY, ai=ai_com)
+    ENEMY = obj_Actor(15, 15, "crab", constants.S_ENEMY, creature=creature_com2, ai=ai_com)
 
-    GAME_OBJECTS = [ENEMY, PLAYER]
+    GAME_OBJECTS = [PLAYER, ENEMY]
 
 
 def game_handle_keys():
